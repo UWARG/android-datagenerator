@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">WARG Data Generator</string>
+    <string name="record">Record</string>
+    <string name="stop">Stop</string>
+    <string name="description_info">Info</string>
+    <string name="permission_request">This app needs permission for camera recording.</string>
+    <string name="camera_error">This device doesn\'t support Camera2 API.</string>
+    <string name="intro_message">This App is to be used in conjunction with the WARG Computer Vision Suite. (https://github.com/UWARG/computer-vision/)</string>
+</resources>

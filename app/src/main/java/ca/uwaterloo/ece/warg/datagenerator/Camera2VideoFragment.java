@@ -37,13 +37,16 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -92,6 +95,21 @@ public class Camera2VideoFragment extends Fragment implements View.OnClickListen
      * preview.
      */
     private CameraCaptureSession mPreviewSession;
+
+    /**
+     * A handler which controls data collection and csv creation
+     */
+    private Handler mDataHandler = new Handler();
+
+    /**
+     * Determines the frequency of data collection
+     */
+    private int mDelay = 1000; //Milliseconds
+
+    /**
+     * The context from which this code is being run
+     */
+    private Context mContext;
 
     /**
      * {@link TextureView.SurfaceTextureListener} handles several lifecycle events on a
@@ -196,8 +214,12 @@ public class Camera2VideoFragment extends Fragment implements View.OnClickListen
     private String mNextVideoAbsolutePath;
     private CaptureRequest.Builder mPreviewBuilder;
 
-    public static Camera2VideoFragment newInstance() {
-        return new Camera2VideoFragment();
+    public static Camera2VideoFragment newInstance(Context context) {
+        return new Camera2VideoFragment(context);
+    }
+
+    Camera2VideoFragment(Context context){
+        mContext = context;
     }
 
     /**
@@ -581,7 +603,12 @@ public class Camera2VideoFragment extends Fragment implements View.OnClickListen
     private String getVideoFilePath(Context context) {
         final File dir = context.getExternalFilesDir(null);
         return (dir == null ? "" : (dir.getAbsolutePath() + "/"))
-                + System.currentTimeMillis() + ".mp4";
+                + getFileName() + ".mp4";
+    }
+
+    private String getFileName(){
+        Calendar cal = Calendar.getInstance();
+        return "flight_data_" + cal.get(Calendar.YEAR) + "-" + cal.get(Calendar.MONTH) + "-" + cal.get(Calendar.DAY_OF_MONTH) + "_" + cal.get(Calendar.HOUR) + "_" + cal.get(Calendar.MINUTE) + "_" + cal.get(Calendar.SECOND) + "." + cal.get(Calendar.MILLISECOND);
     }
 
     private void startRecordingVideo() {
@@ -622,8 +649,19 @@ public class Camera2VideoFragment extends Fragment implements View.OnClickListen
                             mButtonVideo.setText(R.string.stop);
                             mIsRecordingVideo = true;
 
-                            // Start recording
+                            // Start recording video and data
                             mMediaRecorder.start();
+                            //Data
+                            Calendar cal = Calendar.getInstance();
+                            final TelemetryWriter tw = new TelemetryWriter(mContext, getFileName());
+                            mDataHandler.postDelayed(new Runnable(){
+                                public void run(){
+                                    tw.writeData();
+                                    if (mIsRecordingVideo) {
+                                        mDataHandler.postDelayed(this, mDelay);
+                                    }
+                                }
+                            },mDelay);
                         }
                     });
                 }
@@ -653,7 +691,7 @@ public class Camera2VideoFragment extends Fragment implements View.OnClickListen
         // UI
         mIsRecordingVideo = false;
         mButtonVideo.setText(R.string.record);
-        // Stop recording
+        // Stop recording and data
         mMediaRecorder.stop();
         mMediaRecorder.reset();
 

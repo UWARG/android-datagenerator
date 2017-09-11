@@ -36,25 +36,26 @@ public class TelemetryWriter{
 
     TelemetryWriter(Context context, String fileName){
         mContext = context;
-        File f = context.getExternalFilesDir(null);
-        baseDir = f.getAbsolutePath();
-        filePath = baseDir + File.separator + fileName + fileExt;
+        if (fileName != null) {
+            File f = context.getExternalFilesDir(null);
+            baseDir = f.getAbsolutePath();
+            filePath = baseDir + File.separator + fileName + fileExt;
 
-        try {
-            // File exist
-            if (f.exists() && !f.isDirectory()) {
-                mFileWriter = new FileWriter(filePath, true);
-                writer = new CSVWriter(mFileWriter);
-            } else {
-                writer = new CSVWriter(new FileWriter(filePath));
+            try {
+                // File exist
+                if (f.exists() && !f.isDirectory()) {
+                    mFileWriter = new FileWriter(filePath, true);
+                    writer = new CSVWriter(mFileWriter);
+                } else {
+                    writer = new CSVWriter(new FileWriter(filePath));
+                }
+                writer.writeNext(CSV_HEADERS);
+            } catch (java.io.IOException ex) {
+                Log.e("Error", "IO Exception");
             }
-            writer.writeNext(CSV_HEADERS);
-        }catch(java.io.IOException ex) {
-            Log.e("Error","IO Exception");
         }
 
         //Request GPS Updates
-
         gpsListener = new GPSDataListener(mContext);
         if ( ContextCompat.checkSelfPermission( mContext, android.Manifest.permission.ACCESS_FINE_LOCATION ) == PackageManager.PERMISSION_GRANTED ) {
             LocationManager gpsManager = (LocationManager)mContext.getSystemService(Context.LOCATION_SERVICE);

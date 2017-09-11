@@ -32,14 +32,13 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null){
-            getFragmentManager().beginTransaction().replace(R.id.container,Camera2VideoFragment.newInstance()).commit();
+            getFragmentManager().beginTransaction().replace(R.id.container,Camera2VideoFragment.newInstance(this)).commit();
         }
 
-        TelemetryWriter tw = new TelemetryWriter(this, "AnalysisData");
-        final TelemetryWriter t = tw;
+        final TelemetryWriter tw = new TelemetryWriter(this, null);
         mDataHandler.postDelayed(new Runnable(){
             public void run(){
-                String temp[] = t.collectData();
+                String temp[] = tw.collectData();
                 textViewOutput = "";
                 for (int i = 0; i<temp.length; i++) {
                     String str = temp[i];
@@ -49,7 +48,6 @@ public class MainActivity extends Activity {
                 }
                 final TextView mTextOutput = (TextView)(findViewById(R.id.textView));
                 mTextOutput.setText(textViewOutput);
-                t.writeData();
                 if (!handlerStop) {
                     mDataHandler.postDelayed(this, mDelay);
                 }
